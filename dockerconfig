@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# store this script in /usr/local/bin
+# to run "sudo dockerconfig"
+# can be called from ubuntuconfig and will inherit variables from that script
+# logging in /var/log/dockerconfig.log and /var/log/dockerconfig_errors.log
+
+# user variables
+compose="2.19.0" #get the latest version from https://github.com/docker/compose/releases
+dockerlocation="/docker"
+
+# declare variables
+arch=$(/usr/bin/dpkg --print-architecture) #determines arm64 or amd64
+progname=$0 #captures the name of the program for logging
+logfile=/var/log/dockerconfig.log
+errorlog=/var/log/dockerconfig_errors.log
+# get variables from ubuntuconfig
+if [ -z "$1" ] && [ -z "$2" ]
+then ddir=$dockerlocation
+acct=$(/usr/bin/logname)
+else ddir="$1"
+acct="$2"
+fi
+
+# install dependencies
+/usr/bin/nala install -y apt-transport-https ca-certificates software-properties-common 1>>$logfile 2>>$errorlog
+
+# add GPG of Docker repository
+/usr/bin/curl -fsSL https://download.docker.com/linux/ubuntu/gpg | /usr/bin/gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg 1>>$logfile 2>>$errorlog
+
+# add docker to source file
+/usr/bin/echo "deb [arch=$arch signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(/usr/bin/lsb_release -cs) stable" | /usr/bin/tee /etc/apt/sources.list.d/docker.list > /dev/null 1>>$logfile 2>>$errorlog
+
+# update and install docker community edition
+/usr/bin/nala update 1>>$logfile 2>>$errorlog
+/usr/bin/apt-cache policy docker-ce 1>>$logfile 2>>$errorlog
+/usr/bin/nala install -y docker-ce 1>>$logfile 2>>$errorlog
+
+# add user to docker group
+/usr/sbin/usermod -aG docker $acct 1>>$logfile 2>>$errorlog
+
+## install compose
+/usr/bin/mkdir -p ~/.docker/cli-plugins/ 1>>$logfile 2>>$errorlog
+
+if [ "$arch" = "amd64" ]
+then /usr/bin/curl -SL https://github.com/docker/compose/releases/download/v$compose/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose 1>>$logfile 2>>$errorlog
+elif [ "$arch" = "arm64" ]
+then /usr/bin/curl -SL https://github.com/docker/compose/releases/download/v$compose/docker-compose-linux-armv6 -o ~/.docker/cli-plugins/docker-compose 1>>$logfile 2>>$errorlog
+fi
+
+# make docker compose executable
+/usr/bin/chmod +x ~/.docker/cli-plugins/docker-compose 1>>$logfile 2>>$errorlog
+
+# create docker directory and compose yaml with Portainer
+/usr/bin/mkdir $ddir 1>>$logfile 2>>$errorlog
+/usr/bin/cat <<\EOF > $ddir/docker-compose.yaml
+version: "3"
+services:
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    ports:
+    - 9443:9443
+    volumes:
+    - ./portainer-data:/data
+    - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+volumes:
+  data:
+EOF

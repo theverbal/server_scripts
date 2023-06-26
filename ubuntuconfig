@@ -1,0 +1,259 @@
+#!/bin/bash
+
+# store this script and dockerconfig in /usr/local/bin
+# to run "sudo ubuntuconfig"
+# to install docker run "sudo ubuntuconfig d"
+# to disable IPv6 with apt run "sudo ubuntuconfig i"
+# multiple install conditions can be invoked at once e.g. "di"
+# upon completion script outputs results to /home/$USER/results.log
+# logging in /var/log/ubuntuconfig.log and /var/log/ubuntuconfig_errors.log
+
+# user variables
+dtime="America/Detroit" #see tz list https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+ssh_port="4242" #change port 22 for SSH to alternative
+ssh_pub="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFxPQteXvxJFskR1IVkkA8x9Fav1rUMLWdffSAbJnhiz theverbaldotnet" #ssh public key ed25519
+ddir="/docker" #docker directory
+
+# declare variables
+acct=$(/usr/bin/logname) #captures the name of the user running the script instead of root when run as sudo
+progname=$0 #captures the name of the program for logging
+logfile=/var/log/ubuntuconfig.log
+errorlog=/var/log/ubuntuconfig_errors.log
+# file variables
+comp_log="/home/$acct/results.log"
+restartf="/etc/needrestart/needrestart.conf"
+sshf="/etc/ssh/sshd_config"
+timef="/etc/systemd/timesyncd.conf"
+# optional script variables
+echo $1 | /usr/bin/grep -q d # install docker
+if [ $? -eq 0 ]
+then dckr="y"
+fi
+echo $1 | /usr/bin/grep -q i # disable ipv6
+if [ $? -eq 0 ]
+then ipv4="y"
+fi
+
+# disable IPv6 -- useful if IPv6 is timing out
+if [ "$ipv4" = "y" ] 
+then /usr/bin/echo 'Acquire::ForceIPv4 "true";' | /usr/bin/tee /etc/apt/apt.conf.d/99force-ipv4 1>>$logfile 2>>$errorlog
+fi
+
+#disable pop-ups for automation
+/usr/bin/cp --archive $restartf $restartf-COPY-$(/usr/bin/date +"%Y%m%d%H%M%S") 1>>$logfile 2>>$errorlog
+/usr/bin/sed -i "s/#\$nrconf{kernelhints} = -1;/\$nrconf{kernelhints} = -1;/g" $restartf 1>>$logfile 2>>$errorlog
+/usr/bin/sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" $restartf 1>>$logfile 2>>$errorlog
+
+# update repositories
+/usr/bin/apt update 1>>$logfile 2>>$errorlog && /usr/bin/apt upgrade -y 1>>$logfile 2>>$errorlog
+
+# install nala - apt front-end
+/usr/bin/apt install nala -y 1>>$logfile 2>>$errorlog
+
+# install additional packages
+/usr/bin/nala install -y vim exa ripgrep tldr bat neofetch 1>>$logfile 2>>$errorlog
+
+# archive timesync conf and create new
+/usr/bin/cp --archive $timef $timef-COPY-$(/usr/bin/date +"%Y%m%d%H%M%S") 1>>$logfile 2>>$errorlog
+/usr/bin/rm $timef 1>>$logfile 2>>$errorlog
+# create timesyncd and set to open-source public NTP server
+/usr/bin/cat <<EOF > $timef 
+[Time]
+NTP=0.pool.ntp.org 1.pool.ntp.org
+FallbackNTP=ntp.ubuntu.com
+EOF
+
+# restart the systemd-timesyncd service
+/usr/bin/systemctl restart systemd-timesyncd 1>>$logfile 2>>$errorlog
+
+# set timezone
+/usr/bin/timedatectl set-timezone $dtime 1>>$logfile 2>>$errorlog
+
+# launch neofetch on shell
+/usr/bin/echo -e "\n# launch neofetch on login \nneofetch" >> /home/$acct/.bashrc 
+
+# create bash aliases
+cat <<EOF > /home/$acct/.bash_aliases 
+# # # # # # # # # # # # # # # # # # # # 
+#  █████╗ ██╗     ██╗ █████╗ ███████╗ #
+# ██╔══██╗██║     ██║██╔══██╗██╔════╝ #
+# ███████║██║     ██║███████║███████╗ #
+# ██╔══██║██║     ██║██╔══██║╚════██║ #
+# ██║  ██║███████╗██║██║  ██║███████║ #
+# ╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝╚══════╝ #
+# # # # # # # # # # # # # # # # # # # #                                 
+
+
+# ls with exa and flags
+alias ls="exa -al --color=always --group-directories-first"
+
+# cat with bat(cat)
+alias cat=batcat
+
+# replace grep with ripgrep
+alias grep=rg
+
+# vim 
+alias vi=vim
+alias svi="sudo vi" 
+alias edit=vim
+
+# cd up the directories
+alias ..='cd ..' 
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# shortcuts
+alias h=history
+alias c=clear
+alias f='find . |grep '
+
+# get disk free space formatted
+alias df="sudo df -Tha --total"
+
+# get memory usage
+alias free="free -mt"
+
+# mkdir create parents
+alias mkdir="mkdir -pv"
+
+# sudo for systemctl commands
+alias systemctl="sudo systemctl"
+
+# get external IP address
+alias myip="curl http://ipecho.net/plain; echo"
+
+# display disk devices in order
+alias mnt="mount | awk -F' ' '{ printf \"%s\t%s\n\",\$1,\$3; }' | column -t | egrep ^/dev/ | sort"
+
+# automatically resume a download if it is interrupted
+alias wget='wget -c' 
+
+# show progress bar when copying files
+alias cpv='rsync -ah --info=progress2'
+
+### NETWORKING ###
+# Stop after sending count ECHO_REQUEST packets #
+alias ping='ping -c 5'
+# Do not wait interval 1 second, go fast #
+alias fastping='ping -c 100 -s.2'
+alias flushdns='sudo resolvectl flush-caches'
+
+# power
+alias reboot='sudo /sbin/reboot'
+alias poweroff='sudo /sbin/poweroff'
+alias halt='sudo /sbin/halt'
+alias shutdown='sudo /sbin/shutdown now'
+
+# nala package manager 
+alias update='sudo nala update && sudo nala upgrade'
+alias upd='sudo nala update'
+alias upg='sudo nala upgrade'
+alias install='sudo nala install'
+alias remove='sudo nala remove'
+
+# datetime
+alias d='date +%F'
+alias now='date +"%T"'
+alias nowtime=now
+alias nowdate='date +"%m-%d-%Y"'
+
+# confirmation for file commands
+alias cp='cp -i' 
+alias ln='ln -i' 
+alias mv='mv -i'
+
+# docker compose
+alias dcup='docker compose -f $ddir/docker-compose.yaml up -d' #brings up all containers if one is not defined after dcup
+alias dcdown='docker compose -f $ddir/docker-compose.yaml stop' #brings down all containers if one is not defined after dcdown
+alias dcpull='docker compose -f $ddir/docker-compose.yaml pull' #pulls all new images is specified after dcpull
+alias dclogs='docker compose -f $ddir/docker-compose.yaml logs -tf --tail="50" '
+alias dtail='docker logs -tf --tail="50" "$@"'
+EOF
+
+# deny all incoming and outgoing traffic by default
+/usr/sbin/ufw default deny outgoing 1>>$logfile 2>>$errorlog
+/usr/sbin/ufw default deny incoming 1>>$logfile 2>>$errorlog
+
+# allow HTTP, HTTPS, SSH ($ssh_port), NTP, and DNS traffic
+/usr/sbin/ufw allow 80,443/tcp 1>>$logfile 2>>$errorlog
+/usr/sbin/ufw allow $ssh_port/tcp 1>>$logfile 2>>$errorlog
+/usr/sbin/ufw allow 123/udp 1>>$logfile 2>>$errorlog
+/usr/sbin/ufw allow in from any to any port 53 1>>$logfile 2>>$errorlog
+/usr/sbin/ufw allow out 80,443/tcp 1>>$logfile 2>>$errorlog
+/usr/sbin/ufw allow out $ssh_port/tcp 1>>$logfile 2>>$errorlog
+/usr/sbin/ufw allow out 123/udp 1>>$logfile 2>>$errorlog
+/usr/sbin/ufw allow out from any to any port 53 1>>$logfile 2>>$errorlog
+
+# enable ufw
+/usr/sbin/ufw enable 1>>$logfile 2>>$errorlog
+
+# Configure SSH for Port $ssh_port and disable root login
+/usr/bin/cp --archive $sshf $sshf-COPY-$(/usr/bin/date +"%Y%m%d%H%M%S") 1>>$logfile 2>>$errorlog
+/usr/bin/sed -i "s/#Port 22/Port $ssh_port/" $sshf 1>>$logfile 2>>$errorlog
+/usr/bin/sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin no/" $sshf 1>>$logfile 2>>$errorlog
+/user/bin/echo -e "$ssh_pub" >> /home/$acct/.ssh/authorized_keys
+/usr/bin/systemctl restart sshd 1>>$logfile 2>>$errorlog
+
+# backup and recreate unattended-upgrades configuration
+/usr/bin/cat <<\EOF > /etc/apt/apt.conf.d/51my-unattended-upgrades 
+Unattended-Upgrade::Allowed-Origins {
+"${distro_id}:${distro_codename}-updates";
+};
+
+Unattended-Upgrade::Automatic-Reboot "true";
+
+Unattended-Upgrade::Automatic-Reboot-WithUsers "true";
+
+Unattended-Upgrade::Automatic-Reboot-Time "03:00";
+EOF
+
+# check to see if Docker should be configured
+if [ "$dckr" = "y" ]
+then /usr/local/bin/dockerconfig $ddir $acct 1>>$logfile 2>>$errorlog
+fi
+
+# schedule reboot for 60 seconds
+/usr/sbin/shutdown -r +1 1>>$logfile 2>>$errorlog
+
+#clear screen
+/usr/bin/clear
+
+# output completion file
+/usr/bin/batcat <<\EOF > $comp_log
+ CCCCC   OOOOO  MM    MM PPPPPP  LL      EEEEEEE TTTTTTT EEEEEEE 
+CC    C OO   OO MMM  MMM PP   PP LL      EE        TTT   EE      
+CC      OO   OO MM MM MM PPPPPP  LL      EEEEE     TTT   EEEEE   
+CC    C OO   OO MM    MM PP      LL      EE        TTT   EE      
+ CCCCC   OOOO0  MM    MM PP      LLLLLLL EEEEEEE   TTT   EEEEEEE 
+
+----------------------------------------------------------------
+The system will reboot in 60 seconds.
+----------------------------------------------------------------
+
+REMINDER after reboot run `nala fetch` to update repositories (select 3)
+EOF
+if [ "$dckr" = "y" ]
+then /usr/bin/echo -e "after reboot run \`dcup\` to start Portainer" >> $comp_log
+fi
+
+/usr/bin/echo -e "\nTimesync status:" >> $comp_log
+/usr/bin/systemctl status systemd-timesyncd | grep active >> $comp_log
+
+/usr/bin/echo -e "\nUnattended-upgrades status:" >> $comp_log
+/usr/bin/systemctl status unattended-upgrades | grep active >> $comp_log
+
+if [ "$dckr" = "y" ]
+then /usr/bin/echo -e "\nDocker status:" >> $comp_log
+/usr/bin/systemctl status docker | /usr/bin/grep active >> $comp_log
+docker compose version >> $comp_log
+fi
+
+/usr/bin/echo -e "\nSSH status:" >> $comp_log
+/usr/bin/ss -tlpn | /usr/bin/grep ssh >> $comp_log
+
+/usr/bin/echo -e "\nUFW" >> $comp_log
+/usr/sbin/ufw status numbered >> $comp_log
+
+# print results
+/usr/bin/batcat $comp_log
