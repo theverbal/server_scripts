@@ -15,7 +15,8 @@ progname=$0 #captures the name of the program for logging
 logfile=/var/log/dockerconfig.log
 errorlog=/var/log/dockerconfig_errors.log
 release=$(/usr/bin/lsb_release -cs)
-distro=$(/usr/bin/lsb_release -d)
+distro=$(/usr/bin/lsb_release -d)i
+datey=$(date)
 # get variables from ubuntuconfig
 if [ -z "$1" ] && [ -z "$2" ]
 then ddir=$dockerlocation
@@ -23,6 +24,9 @@ acct=$(/usr/bin/logname)
 else ddir="$1"
 acct="$2"
 fi
+
+# start logging
+/usr/bin/echo "Starting dockerconfig at $datey" 1>>$logfile 2>>$errorlog 
 
 # install dependencies
 /usr/bin/nala install -y apt-transport-https ca-certificates software-properties-common gnupg 1>>$logfile 2>>$errorlog
