@@ -33,6 +33,12 @@ if [ $? -eq 0 ]
 then ipv4="y"
 fi
 
+# Check if Script is Run as Root
+if [[ $EUID -ne 0 ]]; then
+  /usr/bin/echo "You must be a root user to run this script, please run sudo debianconfig" 2>&1
+  exit 1
+fi
+
 # disable IPv6 -- useful if IPv6 is timing out
 if [ "$ipv4" = "y" ] 
 then /usr/bin/echo 'Acquire::ForceIPv4 "true";' | /usr/bin/tee /etc/apt/apt.conf.d/99force-ipv4 1>>$logfile 2>>$errorlog
