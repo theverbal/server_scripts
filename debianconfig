@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # store this script and dockerconfig in /usr/local/bin
-# to run "sudo ubuntuconfig"
-# to install docker run "sudo ubuntuconfig d"
-# to disable IPv6 with apt run "sudo ubuntuconfig i"
+# to run "sudo debianconfig"
+# to install docker run "sudo debianconfig d"
+# to disable IPv6 with apt run "sudo debianconfig i"
 # multiple install conditions can be invoked at once e.g. "di"
 # upon completion script outputs results to /home/$USER/results.log
-# logging in /var/log/ubuntuconfig.log and /var/log/ubuntuconfig_errors.log
+# logging in /var/log/debianconfig.log and /var/log/debianconfig_errors.log
 
 # user variables
 dtime="America/Detroit" #see tz list https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
@@ -17,11 +17,10 @@ ddir="/docker" #docker directory
 # declare variables
 acct=$(/usr/bin/logname) #captures the name of the user running the script instead of root when run as sudo
 progname=$0 #captures the name of the program for logging
-logfile=/var/log/ubuntuconfig.log
-errorlog=/var/log/ubuntuconfig_errors.log
+logfile=/var/log/debianconfig.log
+errorlog=/var/log/debianconfig_errors.log
 # file variables
 comp_log="/home/$acct/results.log"
-restartf="/etc/needrestart/needrestart.conf"
 sshf="/etc/ssh/sshd_config"
 timef="/etc/systemd/timesyncd.conf"
 # optional script variables
@@ -39,11 +38,6 @@ if [ "$ipv4" = "y" ]
 then /usr/bin/echo 'Acquire::ForceIPv4 "true";' | /usr/bin/tee /etc/apt/apt.conf.d/99force-ipv4 1>>$logfile 2>>$errorlog
 fi
 
-#disable pop-ups for automation
-/usr/bin/cp --archive $restartf $restartf-COPY-$(/usr/bin/date +"%Y%m%d%H%M%S") 1>>$logfile 2>>$errorlog
-/usr/bin/sed -i "s/#\$nrconf{kernelhints} = -1;/\$nrconf{kernelhints} = -1;/g" $restartf 1>>$logfile 2>>$errorlog
-/usr/bin/sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" $restartf 1>>$logfile 2>>$errorlog
-
 # update repositories
 /usr/bin/apt update 1>>$logfile 2>>$errorlog && /usr/bin/apt upgrade -y 1>>$logfile 2>>$errorlog
 
@@ -51,7 +45,7 @@ fi
 /usr/bin/apt install nala -y 1>>$logfile 2>>$errorlog
 
 # install additional packages
-/usr/bin/nala install -y vim exa ripgrep tldr bat neofetch 1>>$logfile 2>>$errorlog
+/usr/bin/nala install -y vim exa ripgrep tldr bat neofetch ufw unattended-upgrades curl btop 1>>$logfile 2>>$errorlog
 
 # archive timesync conf and create new
 /usr/bin/cp --archive $timef $timef-COPY-$(/usr/bin/date +"%Y%m%d%H%M%S") 1>>$logfile 2>>$errorlog
@@ -60,7 +54,7 @@ fi
 /usr/bin/cat <<EOF > $timef 
 [Time]
 NTP=0.pool.ntp.org 1.pool.ntp.org
-FallbackNTP=ntp.ubuntu.com
+FallbackNTP=ntp.debian.com
 EOF
 
 # restart the systemd-timesyncd service
@@ -192,7 +186,11 @@ EOF
 /usr/bin/cp --archive $sshf $sshf-COPY-$(/usr/bin/date +"%Y%m%d%H%M%S") 1>>$logfile 2>>$errorlog
 /usr/bin/sed -i "s/#Port 22/Port $ssh_port/" $sshf 1>>$logfile 2>>$errorlog
 /usr/bin/sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin no/" $sshf 1>>$logfile 2>>$errorlog
-/user/bin/echo -e "$ssh_pub" >> /home/$acct/.ssh/authorized_keys
+/usr/bin/sed -i "s/X11Forwarding yes/X11Forwarding no/" $sshf 1>>$logfile 2>>$errorlog
+/usr/bin/mkdir /home/$acct/.ssh 1>>$logfile 2>>$errorlog
+/usr/bin/touch /home/$acct/.ssh/authorized_keys 1>>$logfile 2>>$errorlog
+/usr/bin/chmod 600 /home/$acct/.ssh/authorized_keys 1>>$logfile 2>>$errorlog
+/usr/bin/echo -e "$ssh_pub" >> /home/$acct/.ssh/authorized_keys 1>>$logfile 2>>$errorlog
 /usr/bin/systemctl restart sshd 1>>$logfile 2>>$errorlog
 
 # backup and recreate unattended-upgrades configuration
@@ -238,10 +236,10 @@ then /usr/bin/echo -e "after reboot run \`dcup\` to start Portainer" >> $comp_lo
 fi
 
 /usr/bin/echo -e "\nTimesync status:" >> $comp_log
-/usr/bin/systemctl status systemd-timesyncd | /usr/bin/grep active >> $comp_log
+/usr/bin/systemctl status systemd-timesyncd | grep active >> $comp_log
 
 /usr/bin/echo -e "\nUnattended-upgrades status:" >> $comp_log
-/usr/bin/systemctl status unattended-upgrades | /usr/bin/grep active >> $comp_log
+/usr/bin/systemctl status unattended-upgrades | grep active >> $comp_log
 
 if [ "$dckr" = "y" ]
 then /usr/bin/echo -e "\nDocker status:" >> $comp_log
