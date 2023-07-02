@@ -15,7 +15,7 @@ progname=$0 #captures the name of the program for logging
 logfile=/var/log/dockerconfig.log
 errorlog=/var/log/dockerconfig_errors.log
 release=$(/usr/bin/lsb_release -cs)
-distro=$(/usr/bin/lsb_release -d)i
+distro=$(/usr/bin/lsb_release -d)
 datey=$(date)
 # get variables from ubuntuconfig
 if [ -z "$1" ] && [ -z "$2" ]
