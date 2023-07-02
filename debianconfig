@@ -24,11 +24,11 @@ comp_log="/home/$acct/results.log"
 sshf="/etc/ssh/sshd_config"
 timef="/etc/systemd/timesyncd.conf"
 # optional script variables
-echo $1 | /usr/bin/grep -q d # install docker
+/urs/bin/echo $1 | /usr/bin/grep -q d # install docker
 if [ $? -eq 0 ]
 then dckr="y"
 fi
-echo $1 | /usr/bin/grep -q i # disable ipv6
+/usr/bin/echo $1 | /usr/bin/grep -q i # disable ipv6
 if [ $? -eq 0 ]
 then ipv4="y"
 fi
