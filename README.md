@@ -1,4 +1,8 @@
-# ubtuntu_server
-Scripts for managing and deploying Ubuntu server
+# Server management scripts
 
-Yay!
+# ubuntuconfig.sh
+
+# debainconfig.sh
+
+# dockerconfig.sh
+Can be run by itself or called by distro config script.
