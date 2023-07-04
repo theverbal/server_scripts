@@ -24,7 +24,7 @@ comp_log="/home/$acct/results.log"
 sshf="/etc/ssh/sshd_config"
 timef="/etc/systemd/timesyncd.conf"
 # optional script variables
-/urs/bin/echo $1 | /usr/bin/grep -q d # install docker
+/usr/bin/echo $1 | /usr/bin/grep -q d # install docker
 if [ $? -eq 0 ]
 then dckr="y"
 fi
