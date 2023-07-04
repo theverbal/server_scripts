@@ -6,11 +6,17 @@ This describes the script.
 
 ## how to use ubuntuconfig
 store this script and dockerconfig in /usr/local/bin
+
 to run "sudo ubuntuconfig"
+
 to install docker run "sudo ubuntuconfig d"
+
 to disable IPv6 with apt run "sudo ubuntuconfig i"
+
 multiple install conditions can be invoked at once e.g. "di"
+
 upon completion script outputs results to /home/$USER/results.log
+
 logging in /var/log/ubuntuconfig.log and /var/log/ubuntuconfig_errors.log
 
 ## user variables
