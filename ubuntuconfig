@@ -198,7 +198,7 @@ EOF
 /usr/bin/cp --archive $sshf $sshf-COPY-$(/usr/bin/date +"%Y%m%d%H%M%S") 1>>$logfile 2>>$errorlog
 /usr/bin/sed -i "s/#Port 22/Port $ssh_port/" $sshf 1>>$logfile 2>>$errorlog
 /usr/bin/sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin no/" $sshf 1>>$logfile 2>>$errorlog
-/user/bin/echo -e "$ssh_pub" >> /home/$acct/.ssh/authorized_keys
+/usr/bin/echo -e "$ssh_pub" >> /home/$acct/.ssh/authorized_keys
 /usr/bin/systemctl restart sshd 1>>$logfile 2>>$errorlog
 
 # backup and recreate unattended-upgrades configuration
