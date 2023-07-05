@@ -83,6 +83,8 @@ logging in /var/log/dockerconfig.log and /var/log/dockerconfig_errors.log
 
 after running the script run "dcup" to launch Portainer
 
-# user variables
+## user variables
+```
 compose="2.19.0" #get the latest version from https://github.com/docker/compose/releases
-dockerlocation="/docker"
+dockerlocation="/docker" # this is overridden if run from debianconfig or ubuntuconfig
+```
