@@ -8,11 +8,11 @@ The Docker config script installs docker-ce, docker compose (version defined in 
 
 All scripts should run on arm64 but have not yet been tested.
 
-# ubuntuconfig
+## ubuntuconfig
 
 Tested on Ubuntu 22.04.
 
-## how to use ubuntuconfig
+### how to use ubuntuconfig
 store this script and dockerconfig in /usr/local/bin
 
 to run "sudo ubuntuconfig"
@@ -29,7 +29,7 @@ logging in /var/log/ubuntuconfig.log and /var/log/ubuntuconfig_errors.log
 
 after running the script run "nala fetch" and pick the three fastest mirrors
 
-## user variables
+### user variables
 The default user values are below. These can be changed by modifiying the script.
 
 ```
@@ -39,11 +39,11 @@ ssh_pub="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFxPQteXvxJFskR1IVkkA8x9Fav1rUMLWdf
 ddir="/docker" #docker directory
 ```
 
-# debainconfig
+## debainconfig
 
 Tested on Debian 12.
 
-## how to use debianconfig
+### how to use debianconfig
 store this script and dockerconfig in /usr/local/bin
 
 to run "sudo debianconfig"
@@ -60,7 +60,7 @@ logging in /var/log/debianconfig.log and /var/log/debianconfig_errors.log
 
 after running the script run "nala fetch" and pick the three fastest mirrors
 
-## user variables
+### user variables
 The default user values are below. These can be changed by modifiying the script.
 
 ```
@@ -71,10 +71,10 @@ ddir="/docker" #docker directory
 ```
 
 
-# dockerconfig
+## dockerconfig
 Can be run by itself or called by distro config script.
 
-## how to use dockerconfig
+### how to use dockerconfig
 store this script in /usr/local/bin
 
 to run "sudo dockerconfig"
@@ -85,7 +85,7 @@ logging in /var/log/dockerconfig.log and /var/log/dockerconfig_errors.log
 
 after running the script run "dcup" to launch Portainer
 
-## user variables
+### user variables
 ```
 compose="2.19.0" #get the latest version from https://github.com/docker/compose/releases
 dockerlocation="/docker" #this is overridden if run from debianconfig or ubuntuconfig
