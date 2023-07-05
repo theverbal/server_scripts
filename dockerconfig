@@ -8,7 +8,7 @@
 
 # user variables
 compose="2.19.0" #get the latest version from https://github.com/docker/compose/releases
-dockerlocation="/docker"
+dockerlocation="/docker" #overridden if run from debianconfig or ubuntuconfig
 
 # declare variables
 arch=$(/usr/bin/dpkg --print-architecture) #determines arm64 or amd64
