@@ -6,6 +6,8 @@ The distro config scripts update and upgrade all packages, install various repla
 
 The Docker config script installs docker-ce, docker compose (version defined in the script), and configures Portainer on Port 9443.
 
+All scripts should run on arm64 but have not yet been tested.
+
 # ubuntuconfig
 
 This describes the script.
