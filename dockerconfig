@@ -2,8 +2,9 @@
 
 # store this script in /usr/local/bin
 # to run "sudo dockerconfig"
-# can be called from ubuntuconfig and will inherit variables from that script
+# can be called from debianconfig or ubuntuconfig and will inherit variables from that script
 # logging in /var/log/dockerconfig.log and /var/log/dockerconfig_errors.log
+# script assumes that nala is installed 
 
 # user variables
 compose="2.19.0" #get the latest version from https://github.com/docker/compose/releases
