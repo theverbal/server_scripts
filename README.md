@@ -1,5 +1,11 @@
 # Server management scripts
 
+These scripts are intended to automate the post installation of a server running Ubuntu 22.04 or Debian 12. The companion script installs Docker and can be invoked by itself or as part of the distribution post installation script. 
+
+The distro config scripts update and upgrade all packages, install various replacement packages (e.g. Nala, batcat, exa, etc.), configure NTP, create a .bash_aliases file with my aliases, configure UFW, harden SSH, and enable unattended-upgrades. 
+
+The Docker config script installs docker-ce, docker compose (version defined in the script), and configures Portainer on Port 9443.
+
 # ubuntuconfig
 
 This describes the script.
@@ -18,6 +24,8 @@ multiple install conditions can be invoked at once e.g. "di"
 upon completion script outputs results to /home/$USER/results.log
 
 logging in /var/log/ubuntuconfig.log and /var/log/ubuntuconfig_errors.log
+
+after running the script run "nala fetch" and pick the three fastest mirrors
 
 ## user variables
 The default user values are below. These can be changed by modifiying the script.
@@ -48,6 +56,8 @@ upon completion script outputs results to /home/$USER/results.log
 
 logging in /var/log/debianconfig.log and /var/log/debianconfig_errors.log
 
+after running the script run "nala fetch" and pick the three fastest mirrors
+
 ## user variables
 The default user values are below. These can be changed by modifiying the script.
 
@@ -70,6 +80,8 @@ to run "sudo dockerconfig"
 can be called from ubuntuconfig or debianconfig and will inherit variables from that script
 
 logging in /var/log/dockerconfig.log and /var/log/dockerconfig_errors.log
+
+after running the script run "dcup" to launch Portainer
 
 # user variables
 compose="2.19.0" #get the latest version from https://github.com/docker/compose/releases
