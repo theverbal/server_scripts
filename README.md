@@ -86,5 +86,5 @@ after running the script run "dcup" to launch Portainer
 ## user variables
 ```
 compose="2.19.0" #get the latest version from https://github.com/docker/compose/releases
-dockerlocation="/docker" # this is overridden if run from debianconfig or ubuntuconfig
+dockerlocation="/docker" #this is overridden if run from debianconfig or ubuntuconfig
 ```
