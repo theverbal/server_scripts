@@ -10,7 +10,7 @@ All scripts should run on arm64 but have not yet been tested.
 
 # ubuntuconfig
 
-This describes the script.
+Tested on Ubuntu 22.04.
 
 ## how to use ubuntuconfig
 store this script and dockerconfig in /usr/local/bin
@@ -41,7 +41,7 @@ ddir="/docker" #docker directory
 
 # debainconfig
 
-This describes the script.
+Tested on Debian 12.
 
 ## how to use debianconfig
 store this script and dockerconfig in /usr/local/bin
