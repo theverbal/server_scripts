@@ -7,13 +7,15 @@ ssh_pub="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFxPQteXvxJFskR1IVkkA8x9Fav1rUMLWdf
 # declare variables
 acct=$(/usr/bin/logname) #captures the name of the user running the script instead of root when run as sudo
 progname=$0 #captures the name of the program for logging
-logfile=/var/log/popconfig.log
-errorlog=/var/log/popconfig_errors.log
-hosts=/etc/hosts
+wdir=$(/usr/bin/pwd)
+logfile="$wdir/popconfig.log"
+errorlog="/$wdir/popconfig_errors.log"
+hosts="/etc/hosts"
+sshf="/etc/ssh/sshd_config"
 
 # Check if Script is Run as Root
 if [[ $EUID -ne 0 ]]; then
-  /usr/bin/echo "You must be a root user to run this script, please run sudo debianconfig" 2>&1
+  /usr/bin/echo "You must be a root user to run this script, please run sudo ./popconfig.sh" 2>&1
   exit 1
 fi
 
@@ -24,12 +26,13 @@ fi
 /usr/bin/apt install nala -y 1>>$logfile 2>>$errorlog
 
 # install additional packages
-/usr/bin/nala install -y tilix fish vim pavucontrol steam gimp qemu-kvm virt-manager libvirt-daemon-system virtinst libvirt-clients bridge-utils bpytop caffeine vlc neofetch bat exa ripgrep tldr resolvconf powerline autojump samba gimp flameshot thunderbird 1>>$logfile 2>>$errorlog
+/usr/bin/nala install -y tilix fish vim pavucontrol ssh gimp qemu-kvm virt-manager libvirt-daemon-system virtinst libvirt-clients bridge-utils bpytop caffeine vlc neofetch bat exa ripgrep tldr resolvconf powerline autojump samba gimp flameshot thunderbird libfuse2 1>>$logfile 2>>$errorlog
 
-flatpak install -y bitwarden obsidian notepadqq steam webcord onlyoffice zotero signal
+flatpak install -y app/com.bitwarden.desktop/x86_64/stable app/md.obsidian.Obsidian/x86_64/stable app/com.notepadqq.Notepadqq/x86_64/stable app/com.valvesoftware.Steam/x86_64/stable app/io.github.spacingbat3.webcord/x86_64/stable app/org.onlyoffice.desktopeditors/x86_64/stable app/org.zotero.Zotero/x86_64/stable app/org.signal.Signal/x86_64/stable 1>>$logfile 2>>$errorlog
 
 # configure alias file
-cat <<EOF > /home/$acct/.config/fish/alias.fish
+/usr/bin/touch /home/$acct/.config/fish/alias.fish 1>>$logfile 2>>$errorlog
+/usr/bin/cat <<EOF > /home/$acct/.config/fish/alias.fish
 # # # # # # # # # # # # # # # # # # # #
 #  █████╗ ██╗     ██╗ █████╗ ███████╗ #
 # ██╔══██╗██║     ██║██╔══██╗██╔════╝ #
@@ -143,9 +146,9 @@ EOF
 
 # Configure HOSTS file
 /usr/bin/cp --archive $hosts $hosts-COPY-$(/usr/bin/date +"%Y%m%d%H%M%S") 1>>$logfile 2>>$errorlog
-/usr/bin/rm $hosts
-/usr/bin/touch $hosts
-cat <<EOF > $hosts
+/usr/bin/rm $hosts 1>>$logfile 2>>$errorlog
+/usr/bin/touch $hosts 1>>$logfile 2>>$errorlog
+/usr/bin/cat <<EOF > $hosts
 # IPv4
 127.0.0.1	localhost
 127.0.1.1	pop-os.localdomain     pop-os
@@ -156,6 +159,7 @@ cat <<EOF > $hosts
 EOF
 
 # create fish config
+/usr/bin/touch /home/$acct/.config/fish/config.fish 1>>$logfile 2>>$errorlog
 /usr/bin/cat <<EOF > /home/$acct/.config/fish/config.fish
 # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # ██╗   ██╗███████╗██████╗ ██████╗  █████╗ ██╗      #
