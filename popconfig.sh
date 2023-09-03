@@ -32,7 +32,7 @@ flatpak install -y app/com.bitwarden.desktop/x86_64/stable app/md.obsidian.Obsid
 
 # configure alias file
 /usr/bin/touch /home/$acct/.config/fish/alias.fish 1>>$logfile 2>>$errorlog
-/usr/bin/cat <<EOF > /home/$acct/.config/fish/alias.fish
+/usr/bin/cat <<\EOF > /home/$acct/.config/fish/alias.fish
 # # # # # # # # # # # # # # # # # # # #
 #  █████╗ ██╗     ██╗ █████╗ ███████╗ #
 # ██╔══██╗██║     ██║██╔══██╗██╔════╝ #
@@ -160,7 +160,7 @@ EOF
 
 # create fish config
 /usr/bin/touch /home/$acct/.config/fish/config.fish 1>>$logfile 2>>$errorlog
-/usr/bin/cat <<EOF > /home/$acct/.config/fish/config.fish
+/usr/bin/cat <<\EOF > /home/$acct/.config/fish/config.fish
 # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # ██╗   ██╗███████╗██████╗ ██████╗  █████╗ ██╗      #
 # ██║   ██║██╔════╝██╔══██╗██╔══██╗██╔══██╗██║      #
@@ -306,3 +306,120 @@ end
 # launch neofetch
 neofetch
 EOF
+
+# MOTU M2 audio interface
+/usr/bin/touch /usr/share/alsa/ucm2/USB-Audio/MOTU/M2.conf 1>>$logfile 2>>$errorlog
+/usr/bin/cat <<\EOF > /usr/share/alsa/ucm2/USB-Audio/MOTU/M2.conf
+Comment "MOTU M2"
+
+SectionUseCase."HiFi" {
+	Comment "Analog Stereo Outputs + Inputs"
+	File "/USB-Audio/MOTU/M2-HiFi.conf"
+}
+
+Define.DirectPlaybackChannels 2
+Define.DirectCaptureChannels 2
+
+Include.dhw.File "/common/direct.conf"
+EOF
+/usr/bin/touch /usr/share/alsa/ucm2/USB-Audio/MOTU/M2-HiFi.conf 1>>$logfile 2>>$errorlog
+/usr/bin/cat <<\EOF > /usr/share/alsa/ucm2/USB-Audio/MOTU/M2-HiFi.conf
+Include.pcm_split.File "/common/pcm/split.conf"
+
+Macro [
+	{
+		SplitPCM {
+			Name "m2_stereo_out"
+			Direction Playback
+			Channels 2
+			HWChannels 2
+			HWChannelPos0 FL
+			HWChannelPos1 FR
+		}
+	}
+	{
+		SplitPCM {
+			Name "m2_mono_in"
+			Direction Capture
+			Channels 1
+			HWChannels 2
+			HWChannelPos0 MONO
+			HWChannelPos1 MONO
+		}
+	}
+	{
+		SplitPCM {
+			Name "m2_stereo_in"
+			Direction Capture
+			Channels 2
+			HWChannels 2
+			HWChannelPos0 FL
+			HWChannelPos1 FR
+		}
+	}
+]
+
+SectionDevice."Line1" {
+	Comment "Headphone + Monitor Out"
+	Value {
+		PlaybackPriority 200
+		PlaybackPCM "hw:${CardId}"
+	}
+}
+
+SectionDevice."Mic1" {
+	Comment "Mic In 1L"
+
+	Value {
+		CapturePriority 200
+	}
+	Macro.pcm_split.SplitPCMDevice {
+		Name "m2_mono_in"
+		Direction Capture
+		HWChannels 2
+		Channels 1
+		Channel0 0
+		ChannelPos0 MONO
+	}
+}
+
+SectionDevice."Mic2" {
+	Comment "Mic In 2R"
+
+	Value {
+		CapturePriority 100
+	}
+	Macro.pcm_split.SplitPCMDevice {
+		Name "m2_mono_in"
+		Direction Capture
+		HWChannels 2
+		Channels 1
+		Channel0 1
+		ChannelPos0 MONO
+	}
+}
+
+SectionDevice."Mic3" {
+	Comment "Stereo Mic In 1L+2R"
+
+	ConflictingDevice [
+		"Mic1"
+		"Mic2"
+	]
+
+	Value {
+		CapturePriority 100
+	}
+	Macro.pcm_split.SplitPCMDevice {
+		Name "m2_stereo_in"
+		Direction Capture
+		HWChannels 2
+		Channels 2
+		Channel0 0
+		Channel1 1
+		ChannelPos0 FL
+		ChannelPos1 FR
+	}
+}
+EOF
+/usr/bin/cp --archive /usr/share/alsa/ucm2/USB-Audio/USB-Audio.conf /usr/share/alsa/ucm2/USB-Audio/USB-Audio.conf-COPY-$(date +"%Y%m%d%H%M%S")
