@@ -37,7 +37,7 @@ do
 done < <(tail -n +2 ${rawdir}/EpisodeMasterList.csv) 1>>$logfile 2>>$errorlog
 
 #create folder, unzip, archive.zip, and validate film
-[[ ! -d $filmdir ]] && mkdir $filmdir && validationdir=1 && unzip ${dldir}/${zipfile} -d $filmdir && mv ${dldir}/${zipfile} ${filmdir}/e${episode}-${filmc}.zip && [[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && validationfail=1 1>>$logfile 2>>$errorlog
+[[ ! -d $filmdir ]] && mkdir $filmdir && validationdir=1 && unzip ${dldir}/${zipfile} -d $filmdir && mv ${dldir}/${zipfile} ${filmdir}/e${episode}-$(clean "$film").zip && [[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && validationfail=1 1>>$logfile 2>>$errorlog
 
 #set permissions to verbal
 chown verbal:verbal ${rawdir}/EpisodeMasterList.csv & chown -R verbal:verbal $filmdir 
