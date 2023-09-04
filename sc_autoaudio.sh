@@ -22,7 +22,7 @@ clean() {
 echo "$acct started $progname at $(date)" | tee -a $logfile
 
 #check if episode master list exists
-[[ ! -f $eml ]] && echo "Episode Master List not found at $eml" && exit 1
+[[ ! -f $eml ]] && { echo "Episode Master List not found at $eml"; exit 1; }
 
 #convert episode master list to csv for parsing
 libreoffice --headless --convert-to csv $eml --outdir $rawdir 1>>$logfile 2>>$errorlog 
@@ -33,14 +33,18 @@ zipfile=$(ls $dldir | grep craig) 1>>$logfile 2>>$errorlog
 #read eml
 while IFS="," read -r episode film month badperson description releasedate recordeddate editr guest notes
 do
-        [[ $recordeddate == $curdate ]] && filmdir=${rawdir}/e${episode}-$(clean "$film")-$(clean "$month")-$(echo $editr |tr '[:lower:]' '[:upper:]')
+        [[ $recordeddate == $curdate ]] && filmdir=${rawdir}/e${episode}-$(clean "$film")-$(clean "$month")-$(echo $editr |tr '[:lower:]' '[:upper:]') && zipsave=${filmdir}/e${episode}-$(clean "$film").zip && cont=1
 done < <(tail -n +2 ${rawdir}/EpisodeMasterList.csv) 1>>$logfile 2>>$errorlog
+i
+#quit if there are no scheduled recordings on this date
+[[ $cont != 1 ]] && { echo "There is no recording scheduled for $curdate"; exit 1; }
 
 #create folder, unzip, archive.zip, and validate film
-[[ ! -d $filmdir ]] && mkdir $filmdir && validationdir=1 && unzip ${dldir}/${zipfile} -d $filmdir && mv ${dldir}/${zipfile} ${filmdir}/e${episode}-$(clean "$film").zip && [[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && validationfail=1 1>>$logfile 2>>$errorlog
+[[ ! -d $filmdir ]] && mkdir $filmdir && dircreate=1 || [[ "$(ls -A $filmdir)" ]] && { echo "$filmdir exists with data"; exit 1; }
+unzip ${dldir}/${zipfile} -d $filmdir && mv ${dldir}/${zipfile} $zipsave
 
 #set permissions to verbal
 chown verbal:verbal ${rawdir}/EpisodeMasterList.csv & chown -R verbal:verbal $filmdir 
 
-[[ $validationdir == 1 ]] && echo "$filmdir created."
-[[ $validationfail == 1 ]] && echo "Warning! Recording name and Episode Master List are inconsistent." || echo "Recording matches Episode Master List."
+[[ $dircreate == 1 ]] && echo "$filmdir created."
+[[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && echo "Warning! Recording name and Episode Master List are inconsistent." || echo "Recording $film matches Episode Master List."
