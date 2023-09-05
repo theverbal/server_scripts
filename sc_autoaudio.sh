@@ -20,7 +20,7 @@ clean() {
 echo "$(date) $acct started $progname" >> $logfile
 
 #check if episode master list exists
-[[ ! -f $eml ]] && { echo "Episode Master List not found at $eml"; echo "$(date) Episode Master List not found at $eml" >> $logfile; exit 1 }
+[[ ! -f $eml ]] && { echo "Episode Master List not found at $eml"; exit 1 }
 
 #convert episode master list to csv for parsing
 libreoffice --headless --convert-to csv $eml --outdir $rawdir &>> $logfile 
@@ -35,13 +35,13 @@ do
 done < <(tail -n +2 ${rawdir}/EpisodeMasterList.csv) &>> $logfile
 
 #quit if there are no scheduled recordings on this date
-[[ $cont != 1 ]] && { echo "There is no recording scheduled for $(date +%d/%m/%Y)";  echo "$(date) There is no recording scheduled for $(date +%d/%m/%Y)" >> $logfile; exit 1 }
+[[ $cont != 1 ]] && { echo "There is no recording scheduled for $(date +%d/%m/%Y)"; exit 1 }
 
 #create folder, unzip, archive.zip, and validate film
-[[ ! -d $filmdir ]] && mkdir $filmdir || [[ "$(ls -A $filmdir)" ]] && { echo "$filmdir exists with data"; echo "$(date) $filmdir exists with data" >> $logfile; exit 1 }
+[[ ! -d $filmdir ]] && mkdir $filmdir || [[ "$(ls -A $filmdir)" ]] && { echo "$filmdir exists with data" ; exit 1 }
 unzip ${dldir}/${zipfile} -d $filmdir &>> $logfile && mv ${dldir}/${zipfile} $zipsave &>> $logfile 
 
 #set permissions to verbal
 chown verbal:verbal ${rawdir}/EpisodeMasterList.csv ; chown -R verbal:verbal $filmdir 
 
-[[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && echo "Warning! Recording name and Episode Master List are inconsistent." ; echo "$(date) Warning! Recording name and Episode Master List are inconsistent." >> $logfile || echo "Recording $film matches Episode Master List."
+[[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && echo "Warning! Recording name and Episode Master List are inconsistent." || echo "Recording $film matches Episode Master List."
