@@ -44,4 +44,4 @@ unzip ${dldir}/${zipfile} -d $filmdir &>> $logfile && mv ${dldir}/${zipfile} $zi
 #set permissions to verbal
 chown verbal:verbal ${rawdir}/EpisodeMasterList.csv ; chown -R verbal:verbal $filmdir 
 
-[[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && echo "Warning! Recording name and Episode Master List are inconsistent." || echo "Recording $film matches Episode Master List."
+[[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && echo "Warning! Recording name and Episode Master List are inconsistent." ; echo "$(date) Warning! Recording name and Episode Master List are inconsistent." >> $logfile || echo "Recording $film matches Episode Master List."
