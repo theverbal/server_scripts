@@ -1,6 +1,5 @@
 #!/bin/bash
 
-curdate=`date +%m/%d/%Y`
 logfile=/var/log/sc_autoaudio.log
 errorlog=/var/log/sc_autoaudio_errors.log
 progname=$0
@@ -16,10 +15,10 @@ clean() {
 }
 
 #verify script is run as sudo
-[[ $EUID -ne 0 ]] &&  /usr/bin/echo "You must be a root user to run this script, please run sudo sc_autoaudio.sh" && exit 1
+[[ $EUID -ne 0 ]] &&  echo "You must be a root user to run this script, please run sudo sc_autoaudio.sh" && exit 1
 
 #log script starting
-echo "$acct started $progname at $(date)" | tee -a $logfile
+echo "$acct started $progname at $(date)" >> $logfile
 
 #check if episode master list exists
 [[ ! -f $eml ]] && { echo "Episode Master List not found at $eml"; exit 1; }
@@ -33,18 +32,19 @@ zipfile=$(ls $dldir | grep craig) 1>>$logfile 2>>$errorlog
 #read eml
 while IFS="," read -r episode film month badperson description releasedate recordeddate editr guest notes
 do
-        [[ $recordeddate == $curdate ]] && filmdir=${rawdir}/e${episode}-$(clean "$film")-$(clean "$month")-$(echo $editr |tr '[:lower:]' '[:upper:]') && zipsave=${filmdir}/e${episode}-$(clean "$film").zip && cont=1
+	[[ $recordeddate == $(date +%d/%m/%Y) ]] && filmdir=${rawdir}/e${episode}-$(clean "$film")-$(clean "$month")-$(echo $editr |tr '[:lower:]' '[:upper:]') && zipsave=${filmdir}/e${episode}-$(clean "$film").zip && cont=1
 done < <(tail -n +2 ${rawdir}/EpisodeMasterList.csv) 1>>$logfile 2>>$errorlog
-i
+
 #quit if there are no scheduled recordings on this date
-[[ $cont != 1 ]] && { echo "There is no recording scheduled for $curdate"; exit 1; }
+[[ $cont != 1 ]] && { echo "There is no recording scheduled for $(date +%d/%m/%Y)"; exit 1; }
 
 #create folder, unzip, archive.zip, and validate film
 [[ ! -d $filmdir ]] && mkdir $filmdir && dircreate=1 || [[ "$(ls -A $filmdir)" ]] && { echo "$filmdir exists with data"; exit 1; }
 unzip ${dldir}/${zipfile} -d $filmdir && mv ${dldir}/${zipfile} $zipsave
 
 #set permissions to verbal
-chown verbal:verbal ${rawdir}/EpisodeMasterList.csv & chown -R verbal:verbal $filmdir 
+chown verbal:verbal ${rawdir}/EpisodeMasterList.csv ; chown -R verbal:verbal $filmdir 
 
 [[ $dircreate == 1 ]] && echo "$filmdir created."
+echo "$acct started $progname at $(date)" | tee -a $logfile
 [[ ! $(cat ${filmdir}/info.txt | grep $film) == *$film* ]] && echo "Warning! Recording name and Episode Master List are inconsistent." || echo "Recording $film matches Episode Master List."
