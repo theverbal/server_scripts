@@ -20,7 +20,7 @@ while IFS=$'\t' read -r episode film month badperson description releasedate rec
 do
 	#[[ $(date +%m/%d/%Y -d "+4 days") > $(date +%m/%d/%Y -d "$recordeddate") ]] && cp $pn ${sdir}/${film}" PN.docx" ; cp $plot ${sdir}/${film}" Plot.docx" ; list+=("$film")
 	#[[ $(date +%m/%d/%Y -d "+4 days") > $(date +%m/%d/%Y -d "$recordeddate") && $recordeddate > $curdate ]] && [[ ! -f ${sdir}/${film}" PN.docx" ]] && cp $pn ${sdir}/${film}" PN.docx" && [[ ! -f ${sdir}/${film}" Plot.docx" ]] && cp $plot ${sdir}/${film}" Plot.docx" && list+=("$film")
-	[[ $(date +%m/%d/%Y -d "+4 days") > $(date +%m/%d/%Y -d "$recordeddate") && $(date +%m/%d/%Y -d "$recordeddate")   ]] && echo "$film"
+	[[ $(date +"%s" -d +"4 days") ge $(date --date='$recordeddate' +"%s") ]] && echo "$film"
 done < <(tail -n +2 $emlc)
 
 rm $emlc
